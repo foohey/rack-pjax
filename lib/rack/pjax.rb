@@ -14,6 +14,10 @@ module Rack
 
       headers = HeaderHash.new(headers)
 
+      request_params = env['action_dispatch.request.parameters']
+      controller     = request_params[:controller].camelize.demodulize.downcase
+      action         = request_params[:action]
+
       new_body = ""
       body.each do |b|
         b.force_encoding('UTF-8') if RUBY_VERSION > '1.9.0'
@@ -25,7 +29,14 @@ module Rack
           if container
             title = parsed_body.at("title")
 
-            "%s%s" % [title, container.inner_html]
+            js = <<-EOS
+              <script type="text/javascript">
+                $("body").attr('id', '#{controller}');
+                $("body").attr('class', '#{action}');
+              </script>
+            EOS
+
+            "%s%s%s" % [js, title, container.inner_html]
           else
             b
           end
